@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:manoel_varela/constant/colors.dart';
 import 'package:manoel_varela/constant/texts.dart';
 import 'package:manoel_varela/entities/books_entity.dart';
+import 'package:manoel_varela/src/features/booking/booking_controller.dart';
+import 'package:manoel_varela/utils/date_extensions.dart';
 
 class BookingPage extends StatefulWidget {
   final BookType bookType;
@@ -14,6 +16,8 @@ class BookingPage extends StatefulWidget {
 }
 
 class _BookingPageState extends State<BookingPage> {
+  BookingController bookingController = Get.find();
+
   List<DateTime?> _singleDatePickerValueWithDefaultValue = [];
   String _getValueText(
     CalendarDatePicker2Type datePickerType,
@@ -28,32 +32,36 @@ class _BookingPageState extends State<BookingPage> {
     return valueText;
   }
 
-  Widget _buildDefaultSingleDatePickerWithValue() {
+  Widget _buildDefaultSingleDatePickerWithValue(List<BookEntity> books) {
     final config = CalendarDatePicker2Config(
-      selectedDayHighlightColor: primaryColor,
-      weekdayLabels: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
-      weekdayLabelTextStyle: const TextStyle(
-        color: Colors.black87,
-        fontWeight: FontWeight.bold,
-      ),
-      firstDayOfWeek: 1,
-      controlsHeight: 50,
-      controlsTextStyle: const TextStyle(
-        color: Colors.black,
-        fontSize: 15,
-        fontWeight: FontWeight.bold,
-      ),
-      dayTextStyle: const TextStyle(
-        color: primaryColor,
-        fontWeight: FontWeight.bold,
-      ),
-      disabledDayTextStyle: const TextStyle(
-        color: Colors.grey,
-      ),
-      selectableDayPredicate: (day) => !day
-          .difference(DateTime.now().subtract(const Duration(days: 1)))
-          .isNegative,
-    );
+        selectedDayHighlightColor: primaryColor,
+        weekdayLabels: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
+        weekdayLabelTextStyle: const TextStyle(
+          color: Colors.black87,
+          fontWeight: FontWeight.bold,
+        ),
+        firstDayOfWeek: 1,
+        controlsHeight: 50,
+        controlsTextStyle: const TextStyle(
+          color: Colors.black,
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+        ),
+        dayTextStyle: const TextStyle(
+          color: primaryColor,
+          fontWeight: FontWeight.bold,
+        ),
+        disabledDayTextStyle: const TextStyle(
+          color: Colors.grey,
+        ),
+        selectableDayPredicate: (day) {
+          final isNegative = day
+              .difference(DateTime.now().subtract(const Duration(days: 1)))
+              .isNegative;
+          return !isNegative &&
+              !books.any((element) =>
+                  element.dateTime == day && element.type == widget.bookType);
+        });
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -62,6 +70,7 @@ class _BookingPageState extends State<BookingPage> {
             value: _singleDatePickerValueWithDefaultValue,
             onValueChanged: (dates) {
               showDialog(
+                  barrierDismissible: false,
                   context: context,
                   builder: (context) {
                     return AlertDialog(
@@ -79,6 +88,7 @@ class _BookingPageState extends State<BookingPage> {
                         TextButton(
                           onPressed: () {
                             Get.back();
+                            setState(() {});
                           },
                           child: const Text(
                             "Cancelar",
@@ -92,7 +102,13 @@ class _BookingPageState extends State<BookingPage> {
                               backgroundColor:
                                   MaterialStatePropertyAll(primaryColor)),
                           onPressed: () {
+                            final date = dates.first;
+                            if (date == null) return;
+                            bookingController.doBook(widget.bookType, date);
+                            bookingController.getAllBooks();
+
                             Get.back();
+                            setState(() {});
                           },
                           child: const Text("Confirmar"),
                         ),
@@ -136,23 +152,39 @@ class _BookingPageState extends State<BookingPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.max,
               children: [
-                _buildDefaultSingleDatePickerWithValue(),
-                Text("Data reservadas", style: actionLabel),
-                const SizedBox(height: 8),
-                ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: 10,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                            color: primaryColor,
-                            borderRadius: BorderRadius.circular(8)),
-                        child: ListTile(
-                          title: Text("01/09/2023", style: textBody),
-                          subtitle: Text("Apto 1102", style: textBody),
-                        ),
+                ValueListenableBuilder(
+                    valueListenable: bookingController.allBooks,
+                    builder: (context, value, _) {
+                      //only maps the books that are the same type as the current page
+                      final books = value
+                          .where((element) => element.type == widget.bookType)
+                          .toList();
+
+                      return Column(
+                        children: [
+                          _buildDefaultSingleDatePickerWithValue(value),
+                          Text("Data reservadas", style: actionLabel),
+                          const SizedBox(height: 8),
+                          ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: books.length,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                return Container(
+                                  margin: const EdgeInsets.all(5),
+                                  decoration: BoxDecoration(
+                                      color: primaryColor,
+                                      borderRadius: BorderRadius.circular(8)),
+                                  child: ListTile(
+                                    title: Text(
+                                        books[index].dateTime.dayMonthYear,
+                                        style: textBody),
+                                    subtitle: Text("${books[index].name}",
+                                        style: textBody),
+                                  ),
+                                );
+                              }),
+                        ],
                       );
                     })
               ],

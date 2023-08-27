@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:manoel_varela/constant/colors.dart';
 import 'package:manoel_varela/constant/texts.dart';
+import 'package:manoel_varela/src/features/login/login_controller.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +15,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  LoginController loginController = Get.find();
+
+  @override
+  void initState() {
+    loginController.userService.addListener();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,8 +54,11 @@ class _LoginPageState extends State<LoginPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: TextField(
+                    onChanged: (email) {
+                      loginController.setEmail(email);
+                    },
                     decoration: InputDecoration(
-                      labelText: "Apartamento",
+                      labelText: "Email",
                       labelStyle: TextStyle(
                         color: Theme.of(context).colorScheme.secondary,
                         fontWeight: FontWeight.w400,
@@ -61,6 +74,9 @@ class _LoginPageState extends State<LoginPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: TextField(
+                    onChanged: (password) {
+                      loginController.setPassword(password);
+                    },
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: "Senha",
@@ -88,7 +104,9 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor:
                             MaterialStatePropertyAll(primaryColor)),
                     onPressed: () {
-                      Get.toNamed('/home');
+                      loginController.doLogin(onSuccess: () {
+                        Get.toNamed('/home');
+                      });
                     },
                     child: Text("Entrar", style: secondaryTitle),
                   ),

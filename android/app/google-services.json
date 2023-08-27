@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "544680987350",
+    "project_id": "condominus-14912",
+    "storage_bucket": "condominus-14912.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:544680987350:android:d11c97e04158a308d0d777",
+        "android_client_info": {
+          "package_name": "com.example.manoel_varela"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "544680987350-3l2i0ppn798lemkhnuoq12mhpepqa1v4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRO8Z2zc6E2SqbkQttKuJstHe1UEFAPYk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "544680987350-3l2i0ppn798lemkhnuoq12mhpepqa1v4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

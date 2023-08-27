@@ -1,11 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:manoel_varela/constant/colors.dart';
 import 'package:manoel_varela/constant/texts.dart';
 import 'package:manoel_varela/entities/books_entity.dart';
-import 'package:manoel_varela/entities/user_entity.dart';
+import 'package:manoel_varela/services/user_controller.dart';
+import 'package:manoel_varela/src/features/booking/booking_controller.dart';
+import 'package:manoel_varela/utils/date_extensions.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,7 +17,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  UserEntity userEntity = Get.find();
+  UserController userController = Get.find();
+  BookingController bookingController = Get.find();
+  @override
+  void initState() {
+    userController.getUserInfo();
+    bookingController.getAllBooks();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,27 +37,122 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 24),
-                Text("Bom dia,", style: titleh2),
-                Text(userEntity.name, style: titleh1),
-                const SizedBox(height: 32),
-                Text("Suas reservas", style: actionLabel),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: primaryColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text("Churrasqueira", style: secondaryTitle),
-                    subtitle: Text("27/08/2023", style: textBody),
-                    trailing: const Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                    ),
-                  ),
+                Row(
+                  children: [
+                    Text("Bom dia,", style: titleh2),
+                    Spacer(),
+                    InkWell(
+                      onTap: () {
+                        FirebaseAuth.instance.signOut();
+                      },
+                      child: Icon(Icons.logout),
+                    )
+                  ],
                 ),
-                const SizedBox(height: 40),
+                ValueListenableBuilder(
+                    valueListenable: userController.user,
+                    builder: (context, value, _) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${value.name}', style: titleh1),
+                          if (value.books.isNotEmpty) ...[
+                            const SizedBox(height: 32),
+                            Text("Suas reservas", style: actionLabel),
+                            const SizedBox(height: 16),
+                          ],
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: value.books.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                margin: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: primaryColor,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: ListTile(
+                                  onTap: () {
+                                    showDialog(
+                                        barrierDismissible: false,
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: Text(
+                                              "Cancelar reserva",
+                                              textAlign: TextAlign.center,
+                                              style: titleh2,
+                                            ),
+                                            content: Text(
+                                              "Deseja cancelar o agendamento do(a) ${value.books[index].type.name} no dia ${value.books[index].dateTime.dayMonthYear}?",
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            actionsAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Get.back();
+                                                  setState(() {});
+                                                },
+                                                child: const Text(
+                                                  "Cancelar",
+                                                  style: TextStyle(
+                                                    color: primaryColor,
+                                                  ),
+                                                ),
+                                              ),
+                                              ElevatedButton(
+                                                style: const ButtonStyle(
+                                                    backgroundColor:
+                                                        MaterialStatePropertyAll(
+                                                            primaryColor)),
+                                                onPressed: () {
+                                                  bookingController
+                                                      .cancelBooking(value
+                                                          .books[index].bookId);
+                                                  userController.getUserInfo();
+                                                  bookingController
+                                                      .getAllBooks();
+
+                                                  Get.back();
+                                                  setState(() {});
+                                                },
+                                                child: const Text("Confirmar"),
+                                              ),
+                                            ],
+                                          );
+                                        });
+                                  },
+                                  title: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(value.books[index].type.name,
+                                          style: secondaryTitle),
+                                      if (value.name == 'admin') ...[
+                                        Text(value.books[index].name,
+                                            style: secondaryTitle),
+                                      ]
+                                    ],
+                                  ),
+                                  subtitle: Text(
+                                      value.books[index].dateTime.dayMonthYear,
+                                      style: textBody),
+                                  trailing: const Icon(
+                                    Icons.settings,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+                      );
+                    }),
                 Text("Reservas", style: actionLabel),
                 SizedBox(height: 16),
                 Container(

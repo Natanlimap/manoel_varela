@@ -3,11 +3,11 @@ import 'package:manoel_varela/entities/books_entity.dart';
 
 class UserEntity {
   String name;
-  String apartment;
+  String uuid;
   List<BookEntity> books;
   UserEntity({
     required this.name,
-    required this.apartment,
     required this.books,
+    required this.uuid,
   });
 }
