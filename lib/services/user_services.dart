@@ -80,6 +80,7 @@ class UserService {
     } else {
       bookData = await getUserBookInfo();
     }
+    bookData.sort((a, b) => a.dateTime.compareTo(b.dateTime));
     return UserEntity(
         name: userData['nome'], books: bookData, uuid: firebaseUser.uid);
   }

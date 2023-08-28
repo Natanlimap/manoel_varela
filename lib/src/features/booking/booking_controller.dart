@@ -8,7 +8,9 @@ class BookingController {
   BookingServices bookingServices = Get.find();
   ValueNotifier<List<BookEntity>> allBooks = ValueNotifier([]);
   Future<void> getAllBooks() async {
-    allBooks.value = await bookingServices.getAllBookInfo();
+    final books = await bookingServices.getAllBookInfo();
+    books.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    allBooks.value = books;
   }
 
   Future<void> cancelBooking(String bookId) async {

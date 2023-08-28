@@ -39,8 +39,11 @@ class BookingServices {
         .collection('condominios')
         .doc('1OLcAGWqmUfjInE6C6eG')
         .collection('reservas')
+        .orderBy('data')
         .get();
+
     return response.docs
+        .toList()
         .map((e) => BookEntity(
             dateTime: e['data'].toDate(),
             type: BookType.fromString(e['tipo']),
